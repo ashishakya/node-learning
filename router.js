@@ -2,6 +2,7 @@
 
 const http = require('http');
 const url = require('url');
+const qs = require('querystring');
 
 let routes = {
     'GET':{
@@ -19,7 +20,24 @@ let routes = {
         }
     },
     'POST':{
-
+        '/api/login':(req, res)=>{
+            let body='';
+            req.on('data', data=>{
+                body+=data;
+                if(body.length > 2097152){ // 2*1024*1024: 2Mb in bytes
+                    res.writeHead(413, {'Content-type':'text/html'})
+                    res.end("<h3>File exceeds 2MB limit</h3>", ()=>{
+                        req.connection.destroy()
+                    })
+                }
+            });
+            req.on('end', ()=>{
+                let params = qs.parse(body);
+                console.log('userName:', params['username']);
+                console.log('password:', params['password']);
+                res.end();
+            });
+        }
     },
     'NA':(req, res)=>{
         res.writeHead(400);
